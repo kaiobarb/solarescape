@@ -35,9 +35,6 @@ class App(object):
             self.screen.blit(self.background, (0, 0))
         pygame.quit()
 
-    def drawCircle(self):
-        pygame.draw.circle(self.screen, (255,0,0), [self.width//2, self.height//2], 5)
-
 
 if __name__ == '__main__':
 
