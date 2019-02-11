@@ -7,6 +7,13 @@ The agent's performance metric will be made up of the speed with which it exits 
 The end result will consist of a solar system simulator and an agent (i.e., satellite) intelligent enough to escape that system, using gravity assist.
 The simulation will be 2D, and the paths of the planets' orbits will be drawn as curved lines, and the agent will be simply represented as a dot.
 
+## Design
+We will split out program into modular components: we will have defined classes for the agent, planets, and the main program. The 
+### Agent
+The agent will contain the necessary logic required to implement Q-learning. 
+### Planet
+Planets will be defined by their mass, position, starting velocity & acceleration. 
+
 ## Goal
 Using [Q-learning](https://en.wikipedia.org/wiki/Q-learning) to teach an agent to use gravital assist to escape a simulated solar system's gravitational pull.
 
