@@ -15,6 +15,8 @@ class App(object):
         self.playtime = 0.0
         self.font = pygame.font.SysFont('mono', 20, bold=True)
 
+    def drawCircle(self):
+        pygame.draw.circle(self.screen, (255,0,0), [self.width//2, self.height//2], 5)
 
     def run(self):
         running = True
