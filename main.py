@@ -1,22 +1,63 @@
 import pygame
 from pygame.locals import *
  
+
+class Body:
+    def __init__(self, screen, startx, starty, velocityx, velocityy, mass, diameter):
+        self.screen = screen
+        self.x = startx
+        self.y = starty
+        self.mass = mass
+        self.vx = float(velocityx)
+        self.vy = float(velocityy)
+        if not diameter: 
+            self.size = (self.mass/pi*5)**(1/2.0)
+        else:
+            self.size = diameter
+        self.color = (int(255-random.random()*200),int(255-random.random()*200),int(255-random.random()*200))
+
+    def render(self):
+        pygame.draw.circle(self.screen, self.color, [self.x, self.y], self.size)
+
 class App(object):
 
-    def __init__(self, width=640, height=400, fps=30):
+    def __init__(self, width=900, height=900):
         pygame.init()
         pygame.display.set_caption("Press ESC to quit")
         self.width = width
         self.height = height
-        self.fps = fps
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.DOUBLEBUF)
         self.background = pygame.Surface(self.screen.get_size()).convert()
-        self.clock = pygame.time.Clock()
-        self.playtime = 0.0
         self.font = pygame.font.SysFont('mono', 20, bold=True)
+        self.bodies = []
+        # maintains information between bodies to ease calculations
+        self.values = {}
 
-    def drawCircle(self):
-        pygame.draw.circle(self.screen, (255,0,0), [self.width//2, self.height//2], 5)
+    def interact(self, bodyA, bodyB):
+        # calculate force, distance between A and B
+        # Use those values to update acceleration, and distance btwn
+
+        # acceleration = force / mass
+        # (<x, y>)velocity = acceleration * (<x, y>)Distance/TotalDistance
+
+        # Save values[(A, B)] = (force, (<x, y>)distance, TotalDistance) 
+        pass
+        
+    def move(self):
+        # call interact on all bodies
+        self.values = {}
+        for cA in self.bodies:
+            for cB in self.bodies:
+                if cA != cB:
+                    self.interacao(cA,cB)
+        # update positions of all bodies
+        for obj in self.bodies:
+            obj.x += obj.vx
+            obj.y += obj.vy
+
+    def draw(self):
+        # Call each body's render function here
+        pass
 
     def run(self):
         running = True
@@ -28,10 +69,6 @@ class App(object):
                     if event.key == pygame.K_ESCAPE:
                         running = False
 
-            milliseconds = self.clock.tick(self.fps)
-            self.playtime += milliseconds / 1000.0
-
-            self.drawCircle()
 
             pygame.display.flip()
             self.screen.blit(self.background, (0, 0))
@@ -40,5 +77,5 @@ class App(object):
 
 if __name__ == '__main__':
 
-    # call with width of window and fps
+    # call with width of window
     App(640, 400).run()

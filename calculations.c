@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <math.h>
-#include "Python.h"
+#include <Python.h>
 
 #define GRAVITY_CONST 6.67428 * pow(10.0, -11.0)
 #define C 299.792458
