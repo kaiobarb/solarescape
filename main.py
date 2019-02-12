@@ -1,5 +1,9 @@
 import pygame
+import calculations
 from pygame.locals import *
+import sys , time , random
+from math import *
+from decimal import *
  
 
 class Body:
@@ -21,7 +25,7 @@ class Body:
 
 class App(object):
 
-    def __init__(self, width=900, height=900):
+    def __init__(self, width=600, height=600):
         pygame.init()
         pygame.display.set_caption("Press ESC to quit")
         self.width = width
@@ -49,7 +53,7 @@ class App(object):
         for cA in self.bodies:
             for cB in self.bodies:
                 if cA != cB:
-                    self.interacao(cA,cB)
+                    self.interact(cA,cB)
         # update positions of all bodies
         for obj in self.bodies:
             obj.x += obj.vx

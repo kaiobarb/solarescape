@@ -40,3 +40,16 @@ static PyObject *calculateDist(PyObject *self, PyObject* args) {
 static PyObject *calculateRelativeMass(PyObject * self, PyObject* args) {
     
 }
+
+static PyMethodDef calculationMethods[] = {
+	{"forc",calculateForce, METH_VARARGS, "Return the Force of interaction between 2 bodies - (a_x,a_y,a_radio,a_mass,b_x,b_y,b_radio,b_mass)"},
+	{"dist",calculateDist, METH_VARARGS, "Return the distance between 2 bodies - (a_x,a_y,a_radio,b_x,b_y,b_radio)"},
+	//{"relativistic_mass",pyplanets_calculations_relativistic_mass,METH_VARARGS, "Return the relativistic mass of a body."},
+	//{"collision",pyplanets_calculations_collision,METH_VARARGS, "Return the new location and speed after the collision"},
+	{NULL, NULL}
+};
+
+void initCalculations(void){
+    PyImport_AddModule("calculations");
+    Py_InitModule("calculations", calculationMethods);
+}
