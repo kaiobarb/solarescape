@@ -1,10 +1,46 @@
 import pygame
 import calculations
-from pygame.locals import *
 import sys , time , random
+import numpy as np
+import gym
+from gym import spaces
+from gym.utils import seeding,
 from math import *
+from pygame.locals import *
 from decimal import *
- 
+
+""" 
+##########
+# Task 1 #
+##########
+
+Solar Escape Environment
+------------------------
+
+There is always at least one celestial body, the sun, and it is always in the center of the screen (x=width/2, y=height/2)
+
+(Reward values are yet to be finalized)
+Reward for entering orbit zone is +10.
+Reward for staying within orbit zone and moving forward (around the celestial body) is +20.
+Reward for completing orbit is +100.
+Reward +1*|current_velocity| every frame. (Thruster adds 0.1 velocity every frame while activated)
+Using Thruster is -0.5 reward each frame.
+
+Episode finishes if agent collides (NI) or fails to stay within orbit distance of target planet once orbit radius has been entered.
+Fuel is infinite.
+
+(NI: Not Implemented)
+Task 1: Orbit once around single target planet (NI)
+Task 2: Orbit as many times as possible around  target planet (NI)
+Task 3: Orbit first target planet, then orbit second target planet at least once. (NI)
+Task 4: Enter orbit radius of every planet, but do not orbit, then exit screen
+
+"""
+FPS = 50
+
+THRUSTER_POWER = 0.1
+
+
 
 class Body:
     def __init__(self, screen, startx, starty, velocityx, velocityy, mass, diameter):
@@ -66,20 +102,32 @@ class Agent(Body):
             self.vy -= self.speed
             pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y+jetSize))
 
-class App(object):
+class SolarescapeEnv(object):
+    metadata = {'render.modes': ['human']}
+
     def __init__(self, width, height):
         pygame.init()
         pygame.display.set_caption("Press ESC to quit")
+        self.seed()
+        # PyGame related
         self.width = width
         self.height = height
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
         self.background = pygame.Surface(self.screen.get_size())
         self.background.convert() 
         self.font = pygame.font.SysFont('mono', 20, bold=True)
+        # List of celestial bodies at play (including agent)
         self.bodies = []
-        # maintains information between bodies to ease calculations
-        self.values = {}
 
+
+    def step(self, action):
+        pass
+
+    def reset(self):
+        pass
+
+    def render(self):
+        pass
     def interact(self, A, B):
         # calculate force, distance between A and B
         dx = B.x - A.x
