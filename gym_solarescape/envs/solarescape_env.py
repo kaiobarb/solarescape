@@ -4,7 +4,7 @@ import sys , time , random
 import numpy as np
 import gym
 from gym import spaces
-from gym.utils import seeding,
+from gym.utils import seeding
 from math import *
 from pygame.locals import *
 from decimal import *
@@ -85,22 +85,41 @@ class Agent(Body):
         square.move_ip(-self.size//2, -self.size//2)
         pygame.draw.rect(self.screen, self.color, square)
 
-    def move(self):
+    def move(self, action):
         jetSize = 10 # pixels
         red = (255, 0, 0)
-        keys=pygame.key.get_pressed()
-        if keys[K_LEFT]:
-            self.vx -= self.speed
-            pygame.draw.line(self.screen, red, (self.x, self.y), (self.x+jetSize, self.y))
-        if keys[K_RIGHT]:
-            self.vx += self.speed
-            pygame.draw.line(self.screen, red, (self.x, self.y), (self.x-jetSize, self.y))
-        if keys[K_DOWN]:
-            self.vy += self.speed
-            pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y-jetSize))
-        if keys[K_UP]:
-            self.vy -= self.speed
-            pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y+jetSize))
+        if action = None:
+            keys=pygame.key.get_pressed()
+            if keys[K_LEFT]:
+                self.vx -= self.speed
+                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x+jetSize, self.y))
+            if keys[K_RIGHT]:
+                self.vx += self.speed
+                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x-jetSize, self.y))
+            if keys[K_DOWN]:
+                self.vy += self.speed
+                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y-jetSize))
+            if keys[K_UP]:
+                self.vy -= self.speed
+                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y+jetSize))
+        else:
+            # left
+            if action[0]:
+                self.vx -= self.speed
+                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x+jetSize, self.y))
+            # right
+            if action[1]:
+                self.vx += self.speed
+                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x-jetSize, self.y))
+            # down
+            if action[2]:
+                self.vy += self.speed
+                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y-jetSize))
+            # up
+            if action[3]:
+                self.vy -= self.speed
+                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y+jetSize))
+
 
 class SolarescapeEnv(object):
     metadata = {'render.modes': ['human']}
@@ -118,16 +137,32 @@ class SolarescapeEnv(object):
         self.font = pygame.font.SysFont('mono', 20, bold=True)
         # List of celestial bodies at play (including agent)
         self.bodies = []
+        self.agent = None
+        # Nop, fire left, right, top, or bottom thruster.
+        self.action_spacce = spaces.Discrete(5)
+
+        self.reset()
 
 
     def step(self, action):
+        self.agent.move(action)
         pass
 
     def reset(self):
+        self.bodies = []
         pass
 
     def render(self):
+        for bod in self.bodies:
+            bod.render()
         pass
+
+    def seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+
+
+
     def interact(self, A, B):
         # calculate force, distance between A and B
         dx = B.x - A.x
