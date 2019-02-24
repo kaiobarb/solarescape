@@ -14,6 +14,7 @@ class Body:
         self.m = mass
         self.vx = float(velocityx)
         self.vy = float(velocityy)
+        self.target = False
         if not diameter: 
             self.size = ((self.m/pi*5)**(1/2.0))/10
         else:
@@ -21,7 +22,15 @@ class Body:
         self.color = (int(255-random.random()*200),int(255-random.random()*200),int(255-random.random()*200))
 
     def render(self):
-        pygame.draw.circle(self.screen, self.color, [int(self.x), int(self.y)], int(self.size))
+        if self.target:
+            s = pygame.Surface((self.size*2, self.size*2), pygame.SRCALPHA)
+            #s.fill((255,250,205, 128))
+            self.screen.blit(s, (self.x - self.size*2//2, self.x - self.size*2//2))
+            pygame.draw.circle(s, (255,250,205, 128), [int(self.x), int(self.y)], int(self.size)*2)
+            
+        else:
+            pygame.draw.circle(self.screen, self.color, [int(self.x), int(self.y)], int(self.size))
+
 
 class Agent(Body):
     def __init__(self, screen, startx, starty, mass):
@@ -78,8 +87,13 @@ class App(object):
         force = calculations.force(dx, dy, A.m, A.size, B.m, B.size)
         dist = calculations.dist(dx, dy, A.size, B.size)
         # Use those values to update acceleration, and distance btwn
+
         accelerationA = force / (A.m * 1000000000000) # 1000000000000
         accelerationB = force / (B.m * 1000000000000)
+        if type(A) is Agent:
+            accelerationA *= 3
+        if type(B) is Agent:
+            accelerationB *= 3
         compAx = dx / dist
         compAy = dy / dist
         compBx = -compAx
@@ -121,10 +135,18 @@ class App(object):
         self.bodies.append(Body(self.screen, self.width/2, self.height/2, 0, 0, 1989, 20))
         self.bodies.append(Body(self.screen, self.width/2, self.height/2+200, 0.09, -0.001, 0.05972, 6))
         self.bodies.append(Body(self.screen, self.width/2, self.height/2+400, 0.09, -0.001, 0.05972, 6))
+
+    def createThreeBody(self):
+        self.bodies.append(Body(self.screen, self.width/2, self.height/2-173, 0.05, 0.2, 30000, None))
+        self.bodies.append(Body(self.screen, self.width/2-100, self.height/2, 0.2, -0.05, 30000, None))
+        self.bodies.append(Body(self.screen, self.width/2+100, self.height/2, -0.05, -0.2, 30000, None))
         
 
     def run(self):
-        #self.bodies.append(Body(self.screen,450, 450, 0, 0, 100000001, 60))
+        #targetPlanet = Body(self.screen,450, 450, 0, 0, 5000, None)
+        #targetPlanet.target = True
+        #self.bodies.append(targetPlanet)
+
         #self.bodies.append(Body(self.screen, 450, 600, 0.82, 0, 1, 3))
         #self.bodies.append(Body(self.screen, 450, 800, 0.82, 0, 1, 3))
         #self.bodies.append(Body(self.screen, 450, 500, 0.45, 0, 0.00000000001, 3))
@@ -132,8 +154,12 @@ class App(object):
         # self.bodies.append(Body(self.screen, 600, 420, 0, 0.05, 1001, 3))
         # self.bodies.append(Body(self.screen, 900, 900, 0.02, 0, 1001, 3))
         # self.bodies.append(Body(self.screen, 450, 650, .35, 0, 1, 3))
-        self.placeAtRandom()
-        agent = Agent(self.screen, self.width/2, self.height/2+100, 0.000000000002)
+
+        #self.placeAtRandom()
+
+        self.createThreeBody()
+
+        agent = Agent(self.screen, self.width/2, self.height/2+100, 1)
         self.bodies.append(agent)
         #self.createSystem()
         running = True
