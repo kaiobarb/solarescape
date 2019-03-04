@@ -16,7 +16,9 @@ class Body:
         self.vy = float(velocityy)
         self.target = False
         if not diameter: 
-            self.size = ((self.m/pi*5)**(1/2.0))/10
+            self.size = ((self.m/pi*5)**(1/2.0))/300
+            if self.size < 3:
+                self.size = 3
         else:
             self.size = diameter
         self.color = (int(255-random.random()*200),int(255-random.random()*200),int(255-random.random()*200))
@@ -91,9 +93,9 @@ class App(object):
         accelerationA = force / (A.m * 1000000000000) # 1000000000000
         accelerationB = force / (B.m * 1000000000000)
         if type(A) is Agent:
-            accelerationA *= 3
+            accelerationA *= 10
         if type(B) is Agent:
-            accelerationB *= 3
+            accelerationB *= 10
         compAx = dx / dist
         compAy = dy / dist
         compBx = -compAx
@@ -143,12 +145,12 @@ class App(object):
         
 
     def run(self):
-        #targetPlanet = Body(self.screen,450, 450, 0, 0, 5000, None)
+        #targetPlanet = Body(self.screen, self.width/2, self.height/2, 0, 0, 15000, None)
         #targetPlanet.target = True
         #self.bodies.append(targetPlanet)
 
-        #self.bodies.append(Body(self.screen, 450, 600, 0.82, 0, 1, 3))
-        #self.bodies.append(Body(self.screen, 450, 800, 0.82, 0, 1, 3))
+        self.bodies.append(Body(self.screen,  self.width/2+300, self.height/2+300, -0.02, 0, 1000000, None))
+        self.bodies.append(Body(self.screen, self.width/2, self.height/2, 0, 0, 10000000, None))
         #self.bodies.append(Body(self.screen, 450, 500, 0.45, 0, 0.00000000001, 3))
 
         # self.bodies.append(Body(self.screen, 600, 420, 0, 0.05, 1001, 3))
@@ -157,9 +159,9 @@ class App(object):
 
         #self.placeAtRandom()
 
-        self.createThreeBody()
+        #self.createThreeBody()
 
-        agent = Agent(self.screen, self.width/2, self.height/2+100, 1)
+        agent = Agent(self.screen, self.width/2, self.height/2+100, 10)
         self.bodies.append(agent)
         #self.createSystem()
         running = True
