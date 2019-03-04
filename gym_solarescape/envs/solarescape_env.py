@@ -8,6 +8,7 @@ from gym.utils import seeding
 from math import *
 from pygame.locals import *
 from decimal import *
+import base
 
 """ 
 ##########
@@ -121,7 +122,7 @@ class Agent(Body):
                 pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y+jetSize))
 
 
-class SolarescapeEnv(object):
+class SolarescapeEnv(base.Game):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, width, height):
@@ -141,7 +142,7 @@ class SolarescapeEnv(object):
         # Nop, fire left, right, top, or bottom thruster.
         self.action_spacce = spaces.Discrete(5)
 
-        self.reset()
+        # self.reset()
 
 
     def step(self, action):
