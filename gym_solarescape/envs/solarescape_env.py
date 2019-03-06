@@ -216,7 +216,7 @@ class SolarescapeEnv(base.Game):
             self.bodies.append(Body(self.screen, random.randint(0,self.width), random.randint(0, self.height), 0, 0, self.randrange_float(1,10000,100), None))
 
     def createSystem(self):
-        self.bodies.append(Body(self.screen, self.width/2, self.height/2, 0, 0, 1989, 20))
+        self.bodies.append(Body(self.screen, self.widt10000h/2, self.height/2, 0, 0, 1989, 20))
         self.bodies.append(Body(self.screen, self.width/2, self.height/2+200, 0.09, -0.001, 0.05972, 6))
         self.bodies.append(Body(self.screen, self.width/2, self.height/2+400, 0.09, -0.001, 0.05972, 6))
 
