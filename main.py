@@ -141,6 +141,17 @@ class App(object):
         self.bodies.append(Body(self.screen, self.width/2-100, self.height/2, 0.2, -0.05, 30000, None))
         self.bodies.append(Body(self.screen, self.width/2+100, self.height/2, -0.05, -0.2, 30000, None))
         
+    def solarSystemBois(self):
+        self.bodies.append(Body(self.screen, 700, 450, 0, 0, 332953.784, 30)) #Sun
+        self.bodies.append(Body(self.screen, 720, 450, 0, -1.44, 0.0553, 1)) #Mercury
+        self.bodies.append(Body(self.screen, 736, 450, 0, 1.05, 0.815, 3)) #Venus
+        self.bodies.append(Body(self.screen, 750, 450, 0, -0.87, 1, 4)) #Earth
+        #self.bodies.append(Body(self.screen, 0, 0, 0, 0, 332953784, 20)) #Moon
+        self.bodies.append(Body(self.screen, 780, 450, 0, 0.69, 0.11, 1)) #Mars
+        self.bodies.append(Body(self.screen, 970, 450, 0, -0.39, 317.8, 20)) #Jupiter
+        self.bodies.append(Body(self.screen, 1200, 450, 0, 0.27, 95.2, 14)) #Saturn
+        #self.bodies.append(Body(self.screen, 450, 975, 0, -10, 14.6, 7)) #Uranus
+        #self.bodies.append(Body(self.screen, 450, 1150, 0, 10, 17.2, 9)) #Neptune
 
     def run(self):
         #targetPlanet = Body(self.screen,450, 450, 0, 0, 5000, None)
