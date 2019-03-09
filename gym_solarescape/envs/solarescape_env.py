@@ -3,12 +3,18 @@ import calculations
 import sys , time , random
 import numpy as np
 import gym
+
 from gym import spaces
 from gym.utils import seeding
-from math import *
+import math
+from .utils.vec2d import vec2d
+from .util import percent_round_int
 from pygame.locals import *
 from decimal import *
-import base
+
+
+from base import PyGameWrapper
+from pygame.constants import K_w, K_a, K_s, K_d
 
 """ 
 ##########
@@ -41,130 +47,73 @@ FPS = 50
 
 THRUSTER_POWER = 0.1
 
+class Body(pygame.sprite.Sprite):
+    def __init__(self, initial_position, color, radius, speed, mass):
+        self.position = vec2d(initial_position)
+        self.color = color
+        self.size = size
+        self.mass = mass
+        self.velocity = vec2d((0,0))
 
+        image = pygame.Surface([radius * 2, radius * 2])
+        image.set_colorkey((0, 0, 0))
 
-class Body:
-    def __init__(self, screen, startx, starty, velocityx, velocityy, mass, diameter):
-        self.screen = screen
-        self.x = startx
-        self.y = starty
-        self.m = mass
-        self.vx = float(velocityx)
-        self.vy = float(velocityy)
-        self.target = False
-        if not diameter: 
-            self.size = ((self.m/pi*5)**(1/2.0))/10
-        else:
-            self.size = diameter
-        self.color = (int(255-random.random()*200),int(255-random.random()*200),int(255-random.random()*200))
+        pygame.draw.circle(
+            image,
+            color,
+            initial_position,
+            radius,
+            0
+        )
 
-    def render(self):
-        if self.target:
-            s = pygame.Surface((self.size*2, self.size*2), pygame.SRCALPHA)
-            #s.fill((255,250,205, 128))
-            self.screen.blit(s, (self.x - self.size*2//2, self.x - self.size*2//2))
-            pygame.draw.circle(s, (255,250,205, 128), [int(self.x), int(self.y)], int(self.size)*2)
-            
-        else:
-            pygame.draw.circle(self.screen, self.color, [int(self.x), int(self.y)], int(self.size))
+        self.image = image.convert()
+        self.rect = self.image.get_rect()
+
+        def update(self, dx, dy, dt):
+            self.vel.x += dx
+            self.vel.y += dy
+
+            new_x = self.pos.x + self.vel.x * dt
+            new_y = self.pos.y + self.vel.y * dt
+
+        def draw(self, screen):
+            screen.blit(self.image, self.rect.center)
 
 
 class Agent(Body):
-    def __init__(self, screen, startx, starty, mass):
-        self.screen = screen
-        self.x = startx
-        self.y = starty
-        self.m = mass
-        self.vx = 0.06
-        self.vy = -0.025
-        self.size = 6
-        self.color = (255, 255, 255)
-        self.speed = 0.001
+    def __init__(self, initial_position, color, size, speed, mass):
+        self.position = vec2d(initial_position)
+        self.color = color
+        self.size = size
+        self.mass = mass
+        self.velocity = vec2d((0,0))
 
-    def render(self):
-        square = pygame.Rect(self.x, self.y, self.size, self.size)
-        square.move_ip(-self.size//2, -self.size//2)
-        pygame.draw.rect(self.screen, self.color, square)
+        image = pygame.Surface([size, size])
+        image.set_colorkey((0, 0, 0))
 
-    def move(self, action):
-        jetSize = 10 # pixels
-        red = (255, 0, 0)
-        if action = None:
-            keys=pygame.key.get_pressed()
-            if keys[K_LEFT]:
-                self.vx -= self.speed
-                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x+jetSize, self.y))
-            if keys[K_RIGHT]:
-                self.vx += self.speed
-                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x-jetSize, self.y))
-            if keys[K_DOWN]:
-                self.vy += self.speed
-                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y-jetSize))
-            if keys[K_UP]:
-                self.vy -= self.speed
-                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y+jetSize))
-        else:
-            # left
-            if action[0]:
-                self.vx -= self.speed
-                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x+jetSize, self.y))
-            # right
-            if action[1]:
-                self.vx += self.speed
-                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x-jetSize, self.y))
-            # down
-            if action[2]:
-                self.vy += self.speed
-                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y-jetSize))
-            # up
-            if action[3]:
-                self.vy -= self.speed
-                pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y+jetSize))
+        square = pygame.Rect(self.position.x, self.position.y, self.size, self.size)
 
+        pygame.draw.rect(
+            image,
+            color,
+            square,
+            0
+        )
 
-class SolarescapeEnv(base.Game):
-    metadata = {'render.modes': ['human']}
+        self.image = image.convert()
+        self.rect = self.image.get_rect()
 
-    def __init__(self, width, height):
-        pygame.init()
-        pygame.display.set_caption("Press ESC to quit")
-        self.seed()
-        # PyGame related
-        self.width = width
-        self.height = height
-        self.screen = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
-        self.background = pygame.Surface(self.screen.get_size())
-        self.background.convert() 
-        self.font = pygame.font.SysFont('mono', 20, bold=True)
-        # List of celestial bodies at play (including agent)
-        self.bodies = []
-        self.agent = None
-        # Nop, fire left, right, top, or bottom thruster.
-        self.action_spacce = spaces.Discrete(5)
+        def update(self, dx, dy, dt):
+            self.vel.x += dx
+            self.vel.y += dy
 
-        # self.reset()
+            # new_x = self.pos.x + self.vel.x * dt
+            # new_y = self.pos.y + self.vel.y * dt
 
+        def draw(self, screen):
+            screen.blit(self.image, self.rect.center)
 
-    def step(self, action):
-        self.agent.move(action)
-        pass
-
-    def reset(self):
-        self.bodies = []
-        pass
-
-    def render(self):
-        for bod in self.bodies:
-            bod.render()
-        pass
-
-    def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
-
-
-
-    def interact(self, A, B):
+        def interact(self, A, B):
         # calculate force, distance between A and B
         dx = B.x - A.x
         dy = B.y - A.y
@@ -190,7 +139,97 @@ class SolarescapeEnv(base.Game):
         A.x += A.vx
         A.y += A.vy
         B.x += B.vx
-        B.y += B.vy        
+        B.y += B.vy
+
+class SolarescapeEnv(PyGameWrapper):
+    metadata = {'render.modes': ['human']}
+
+    def __init__(self, width, height):
+
+        #  Definitions for constants used in our agent methods
+        actions = {
+            "up": K_w,
+            "left": K_a,
+            "right": K_d,
+            "down": K_s
+        }
+
+        PyGameWrapper.__init__(self, width, height, actions=actions)
+
+        self.dx = 0
+        self.dy = 0
+        self.ticks = 0
+
+        self.AGENT_COLOR = (60, 60, 140)
+        self.AGENT_SPEED = 0.02
+        self.AGENT_RADIUS = percent_round_int(width, 0.047)
+        self.AGENT_INIT_POS = (width/2, height/2+200)
+        self.AGENT_MASS = 10
+
+        self.SUN_COLOR = (255, 60, 60)
+        self.SUN_SPEED = 0
+        self.SUN_RADIUS = percent_round_int(width, 0.15)
+        self.SUN_INIT_POS = (width/2, height/2)
+        self.SUN_MASS = 1000
+
+        def _handle_player_events(self):
+            self.dx = 0.0
+            self.dy = 0.0
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.KEYDOWN:
+                    key = event.key
+
+                    if key == self.actions["left"]:
+                        self.dx -= self.AGENT_SPEED
+
+                    if key == self.actions["right"]:
+                        self.dx += self.AGENT_SPEED
+
+                    if key == self.actions["up"]:
+                        self.dy -= self.AGENT_SPEED
+
+                    if key == self.actions["down"]:
+                        self.dy += self.AGENT_SPEED
+
+    def step(self, action):
+        self.agent.move(action)
+        pass
+
+    def init(self):
+        # initial_position, color, size, speed, mass
+        self.agent = Agent(
+            self.AGENT_INIT_POS,
+            self.AGENT_COLOR,
+            self.AGENT_RADIUS,
+            self.AGENT_SPEED,
+            self.AGENT_MASS
+        )
+
+        self.sun = Body(
+            self.AGENT_INIT_POS,
+            self.AGENT_COLOR,
+            self.AGENT_RADIUS,
+            self.AGENT_SPEED,
+            self.AGENT_MASS
+        )
+        self.sprite_bodies = pygame.sprite.Group()
+        self.sprite_bodies.add(self.good_creep)
+        self.sprite_bodies.add(self.bad_creep)
+        self.score = 0
+        self.ticks = 0
+
+    def reset(self):
+        self.bodies = []
+        pass
+
+    def render(self):
+        for bod in self.bodies:
+            bod.render()
+        pass        
         
     def move(self, agent):
         if agent == None:
@@ -202,50 +241,13 @@ class SolarescapeEnv(base.Game):
         else:
             agent.move()
 
-    def draw(self):
-        # Call each body's render function here
-        for body in self.bodies:
-            body.render()
-
-    def randrange_float(self, start, stop, step):
-        return random.randint(0, int((stop - start) / step)) * step + start
-        
-
-    def placeAtRandom(self):
-        for _ in range(3):
-            self.bodies.append(Body(self.screen, random.randint(0,self.width), random.randint(0, self.height), 0, 0, self.randrange_float(1,10000,100), None))
-
-    def createSystem(self):
-        self.bodies.append(Body(self.screen, self.widt10000h/2, self.height/2, 0, 0, 1989, 20))
-        self.bodies.append(Body(self.screen, self.width/2, self.height/2+200, 0.09, -0.001, 0.05972, 6))
-        self.bodies.append(Body(self.screen, self.width/2, self.height/2+400, 0.09, -0.001, 0.05972, 6))
-
-    def createThreeBody(self):
-        self.bodies.append(Body(self.screen, self.width/2, self.height/2-173, 0.05, 0.2, 30000, None))
-        self.bodies.append(Body(self.screen, self.width/2-100, self.height/2, 0.2, -0.05, 30000, None))
-        self.bodies.append(Body(self.screen, self.width/2+100, self.height/2, -0.05, -0.2, 30000, None))
-        
 
     def run(self):
-        #targetPlanet = Body(self.screen,450, 450, 0, 0, 5000, None)
-        #targetPlanet.target = True
-        #self.bodies.append(targetPlanet)
-
-        #self.bodies.append(Body(self.screen, 450, 600, 0.82, 0, 1, 3))
-        #self.bodies.append(Body(self.screen, 450, 800, 0.82, 0, 1, 3))
-        #self.bodies.append(Body(self.screen, 450, 500, 0.45, 0, 0.00000000001, 3))
-
-        # self.bodies.append(Body(self.screen, 600, 420, 0, 0.05, 1001, 3))
-        # self.bodies.append(Body(self.screen, 900, 900, 0.02, 0, 1001, 3))
-        # self.bodies.append(Body(self.screen, 450, 650, .35, 0, 1, 3))
-
-        #self.placeAtRandom()
 
         self.createThreeBody()
 
         agent = Agent(self.screen, self.width/2, self.height/2+100, 1)
         self.bodies.append(agent)
-        #self.createSystem()
         running = True
         while running:
             for event in pygame.event.get():
