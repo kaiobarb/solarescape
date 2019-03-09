@@ -1,0 +1,7 @@
+README.md
+setup.py
+gym_solarescape.egg-info/PKG-INFO
+gym_solarescape.egg-info/SOURCES.txt
+gym_solarescape.egg-info/dependency_links.txt
+gym_solarescape.egg-info/requires.txt
+gym_solarescape.egg-info/top_level.txt

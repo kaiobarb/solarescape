@@ -1,19 +1,21 @@
 import pygame
+import ple
 import calculations
 import sys , time , random
 import numpy as np
 import gym
+from base import PyGameWrapper
 
 from gym import spaces
 from gym.utils import seeding
 import math
-from .utils.vec2d import vec2d
-from .util import percent_round_int
+from ple.utils.vec2d import vec2d
+from .utils import percent_round_int
 from pygame.locals import *
 from decimal import *
 
 
-from base import PyGameWrapper
+
 from pygame.constants import K_w, K_a, K_s, K_d
 
 """ 
@@ -73,11 +75,22 @@ class Body(pygame.sprite.Sprite):
             self.vel.x += dx
             self.vel.y += dy
 
-            new_x = self.pos.x + self.vel.x * dt
-            new_y = self.pos.y + self.vel.y * dt
+            # new_x = self.pos.x + self.vel.x * dt
+            # new_y = self.pos.y + self.vel.y * dt
 
         def draw(self, screen):
             screen.blit(self.image, self.rect.center)
+
+        def interact(self, other):
+            dx = other.pos.x - self.pos.x
+            dy = other.pos.y - self.pos.y
+            force = calculations.force(dx, dy, self.mass, self.size, other.mass, other.size)
+            dist = calculations.dist(dx, dy, self.size, other.size)
+            acceleration = force / (self.mass) # 1000000000000
+            compx = dx / dist
+            compy = dy / dist
+            self.velocity.x += acceleration * compx
+            self.velocity.y += acceleration * compy
 
 
 class Agent(Body):
@@ -113,33 +126,16 @@ class Agent(Body):
         def draw(self, screen):
             screen.blit(self.image, self.rect.center)
 
-        def interact(self, A, B):
-        # calculate force, distance between A and B
-        dx = B.x - A.x
-        dy = B.y - A.y
-        force = calculations.force(dx, dy, A.m, A.size, B.m, B.size)
-        dist = calculations.dist(dx, dy, A.size, B.size)
-        # Use those values to update acceleration, and distance btwn
-
-        accelerationA = force / (A.m * 1000000000000) # 1000000000000
-        accelerationB = force / (B.m * 1000000000000)
-        if type(A) is Agent:
-            accelerationA *= 3
-        if type(B) is Agent:
-            accelerationB *= 3
-        compAx = dx / dist
-        compAy = dy / dist
-        compBx = -compAx
-        compBy = -compAy
-        A.vx += accelerationA * compAx
-        A.vy += accelerationA * compAy
-        B.vx += accelerationB * compBx
-        B.vy += accelerationB * compBy
-
-        A.x += A.vx
-        A.y += A.vy
-        B.x += B.vx
-        B.y += B.vy
+        def interact(self, other):
+            dx = other.pos.x - self.pos.x
+            dy = other.pos.y - self.pos.y
+            force = calculations.force(dx, dy, self.mass, self.size, other.mass, other.size)
+            dist = calculations.dist(dx, dy, self.size, other.size)
+            acceleration = force / (self.mass) # 1000000000000
+            compx = dx / dist
+            compy = dy / dist
+            self.velocity.x += acceleration * compx
+            self.velocity.y += acceleration * compy
 
 class SolarescapeEnv(PyGameWrapper):
     metadata = {'render.modes': ['human']}
@@ -159,6 +155,7 @@ class SolarescapeEnv(PyGameWrapper):
         self.dx = 0
         self.dy = 0
         self.ticks = 0
+        self.bodies = []
 
         self.AGENT_COLOR = (60, 60, 140)
         self.AGENT_SPEED = 0.02
@@ -196,8 +193,23 @@ class SolarescapeEnv(PyGameWrapper):
                         self.dy += self.AGENT_SPEED
 
     def step(self, action):
-        self.agent.move(action)
-        pass
+        # self.agent.move(action)
+        self._handle_player_events()
+        numBodies = range(len(self.bodies))
+        for bodyA in bodies:
+            for bodyB in bodies:
+                if(bodyA != bodyB):
+                    bodyA.interact(bodyB)
+        self.score = self.rewards["tick"]
+        dx = self.sun.position.x - self.agent.position.x
+        dy = self.sun.position.y - self.agent.position.y
+        dist_to_sun = math.sqrt(dx * dx + dy + dy)
+        reward = -dist_to_sun
+        self.score += reward
+
+        self.agent.draw(self.screen)
+        for body in self.bodies:
+            body.draw(self.screen)
 
     def init(self):
         # initial_position, color, size, speed, mass
@@ -216,56 +228,103 @@ class SolarescapeEnv(PyGameWrapper):
             self.AGENT_SPEED,
             self.AGENT_MASS
         )
+
         self.sprite_bodies = pygame.sprite.Group()
-        self.sprite_bodies.add(self.good_creep)
-        self.sprite_bodies.add(self.bad_creep)
+        self.sprite_bodies.add(self.agent)
+        self.sprite_bodies.add(self.sun)
+        self.bodies.add(self.agent)
+        self.bodies.add(self.sun)
         self.score = 0
         self.ticks = 0
+
+    def game_over(self):
+        return False
 
     def reset(self):
         self.bodies = []
         pass
 
-    def render(self):
-        for bod in self.bodies:
-            bod.render()
-        pass        
+    # def render(self):
+    #     for bod in self.bodies:
+    #         bod.render()
+    #     pass        
         
-    def move(self, agent):
-        if agent == None:
-            # call interact on all bodies
-            numBodies = range(len(self.bodies))
-            for i in numBodies:
-                for j in numBodies[i+1:]:
-                        self.interact(self.bodies[i], self.bodies[j])
-        else:
-            agent.move()
+    # def move(self, agent):
+    #     if agent == None:
+    #         # call interact on all bodies
+    #         numBodies = range(len(self.bodies))
+    #         for i in numBodies:
+    #             for j in numBodies[i+1:]:
+    #                     self.interact(self.bodies[i], self.bodies[j])
+    #     else:
+    #         agent.move()
 
 
-    def run(self):
+    # def run(self):
 
-        self.createThreeBody()
+    #     self.createThreeBody()
 
-        agent = Agent(self.screen, self.width/2, self.height/2+100, 1)
-        self.bodies.append(agent)
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        running = False
+    #     agent = Agent(self.screen, self.width/2, self.height/2+100, 1)
+    #     self.bodies.append(agent)
+    #     running = True
+    #     while running:
+    #         for event in pygame.event.get():
+    #             if event.type == pygame.QUIT:
+    #                 running = False
+    #             elif event.type == pygame.KEYDOWN:
+    #                 if event.key == pygame.K_ESCAPE:
+    #                     running = False
             
-            pygame.display.flip()
-            self.screen.blit(self.background, (0, 0))
-            self.move(None)
-            self.move(agent)
-            self.draw()
-        pygame.quit()
+    #         pygame.display.flip()
+    #         self.screen.blit(self.background, (0, 0))
+    #         self.move(None)
+    #         self.move(agent)
+    #         self.draw()
+    #     pygame.quit()
+
+    # def interact(self, A, B):
+    #         # calculate force, distance between A and B
+    #         dx = B.x - A.x
+    #         dy = B.y - A.y
+    #         force = calculations.force(dx, dy, A.m, A.size, B.m, B.size)
+    #         dist = calculations.dist(dx, dy, A.size, B.size)
+    #         # Use those values to update acceleration, and distance btwn
+
+    #         accelerationA = force / (A.m * 1000000000000) # 1000000000000
+    #         accelerationB = force / (B.m * 1000000000000)
+    #         if type(A) is Agent:
+    #             accelerationA *= 3
+    #         if type(B) is Agent:
+    #             accelerationB *= 3
+    #         compAx = dx / dist
+    #         compAy = dy / dist
+    #         compBx = -compAx
+    #         compBy = -compAy
+    #         A.vx += accelerationA * compAx
+    #         A.vy += accelerationA * compAy
+    #         B.vx += accelerationB * compBx
+    #         B.vy += accelerationB * compBy
+
+    #         A.x += A.vx
+    #         A.y += A.vy
+    #         B.x += B.vx
+    #         B.y += B.vy
 
 
 if __name__ == '__main__':
 
     # call with width of window
-    App(1400, 900).run()
+    SolarEscape(1400, 900).run()
+    import numpy as np
+
+    pygame.init()
+    game = SolarescapeEnv(width=256, height=256)
+    game.screen = pygame.display.set_mode(game.getScreenDims(), 0, 32)
+    game.clock = pygame.time.Clock()
+    game.rng = np.random.RandomState(24)
+    game.init()
+
+    while True:
+        dt = game.clock.tick_busy_loop(60)
+        game.step(dt)
+        pygame.display.update()
