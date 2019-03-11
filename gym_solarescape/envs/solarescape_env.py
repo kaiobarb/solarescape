@@ -4,13 +4,14 @@ import calculations
 import sys , time , random
 import numpy as np
 import gym
-from base import PyGameWrapper
-
+#from base import PyGameWrapper
+from ple.games.base.pygamewrapper import PyGameWrapper
 from gym import spaces
 from gym.utils import seeding
 import math
-from ple.utils.vec2d import vec2d
-from .utils import percent_round_int
+from pygame.locals import *
+from Vec2d import vec2d
+from ple.games.utils import percent_round_int
 from pygame.locals import *
 from decimal import *
 
@@ -140,7 +141,7 @@ class Agent(Body):
 class SolarescapeEnv(PyGameWrapper):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, width, height):
+    def __init__(self, width=256, height=256):
 
         #  Definitions for constants used in our agent methods
         actions = {

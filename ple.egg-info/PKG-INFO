@@ -1,0 +1,15 @@
+Metadata-Version: 1.1
+Name: ple
+Version: 0.0.1
+Summary: PyGame Learning Environment
+Home-page: https://github.com/ntasfi/PyGame-Learning-Environment
+Author: Norman Tasfi
+Author-email: first letter of first name plus last at googles email service.
+License: MIT
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
