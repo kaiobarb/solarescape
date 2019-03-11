@@ -83,7 +83,7 @@ class Body(pygame.sprite.Sprite):
         pygame.draw.circle(
             screen,
             self.color,
-            (self.position.x, self.position.y),
+            [int(self.position.x), int(self.position.y)],
             int(self.size)
             
         )
@@ -188,15 +188,15 @@ class SolarescapeEnv(PyGameWrapper):
 
         self.AGENT_COLOR = (60, 60, 140)
         self.AGENT_SPEED = 0.2
-        self.AGENT_RADIUS = int(percent_round_int(width, 0.047))
+        self.AGENT_RADIUS = int(percent_round_int(width, 0.027))
         self.AGENT_INIT_POS = (width/2, height/2+200)
         self.AGENT_MASS = int(10)
 
         self.SUN_COLOR = (255, 60, 60)
         self.SUN_SPEED = 0
-        self.SUN_RADIUS = int(percent_round_int(width, 0.15))
+        self.SUN_RADIUS = int(percent_round_int(width, 0.05))
         self.SUN_INIT_POS = (width/2+100, height/2-100)
-        self.SUN_MASS = int(100)
+        self.SUN_MASS = int(100000000)
 
     def _handle_player_events(self):
         self.dx = 0.0
