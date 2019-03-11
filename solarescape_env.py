@@ -132,9 +132,9 @@ class Agent(pygame.sprite.Sprite):
     def update(self, dx, dy, dt):
         # self.vel.x += dx
         # self.vel.y += dy
-        self.position.x += dx
-        self.position.y += dy
-        self.rect.center = (self.position.x, self.position.y)
+        self.velocity.x += dx
+        self.velocity.y += dy
+        #self.rect.center = (self.position.x, self.position.y)
 
         # new_x = self.pos.x + self.vel.x * dt
         # new_y = self.pos.y + self.vel.y * dt
@@ -150,7 +150,7 @@ class Agent(pygame.sprite.Sprite):
             square,
             0
         )
-        print(screen.blit(self.image, self.rect.center))
+        screen.blit(self.image, self.rect.center)
 
     def interact(self, other):
         dx = other.position.x - self.position.x
@@ -169,14 +169,15 @@ class Agent(pygame.sprite.Sprite):
 class SolarescapeEnv(PyGameWrapper):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, width=256, height=256):
+    def __init__(self, width, height):
 
         #  Definitions for constants used in our agent methods
         actions = {
             "up": K_w,
             "left": K_a,
             "right": K_d,
-            "down": K_s
+            "down": K_s,
+            "nop": None
         }
 
         PyGameWrapper.__init__(self, width, height, actions=actions)
@@ -187,24 +188,40 @@ class SolarescapeEnv(PyGameWrapper):
         self.bodies = []
 
         self.AGENT_COLOR = (60, 60, 140)
-        self.AGENT_SPEED = 0.2
-        self.AGENT_RADIUS = int(percent_round_int(width, 0.027))
+        self.AGENT_SPEED = 0.1
+        self.AGENT_RADIUS = 10
         self.AGENT_INIT_POS = (width/2, height/2+200)
         self.AGENT_MASS = int(10)
 
         self.SUN_COLOR = (255, 60, 60)
         self.SUN_SPEED = 0
-        self.SUN_RADIUS = int(percent_round_int(width, 0.05))
+        self.SUN_RADIUS = 20
         self.SUN_INIT_POS = (width/2+100, height/2-100)
-        self.SUN_MASS = int(100000000)
+        self.SUN_MASS = int(100000000000)
 
     def _handle_player_events(self):
         self.dx = 0.0
         self.dy = 0.0
+        jetSize = 10
+        centerPosition = (int(self.agent.position.x+self.agent.size/2) , int(self.agent.position.y+self.agent.size/2) )
+        red = (255,0,0)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
+        #      if keys[K_LEFT]:
+        #     self.vx -= self.speed
+        #     pygame.draw.line(self.screen, red, (self.x, self.y), (self.x+jetSize, self.y))
+        # if keys[K_RIGHT]:
+        #     self.vx += self.speed
+        #     pygame.draw.line(self.screen, red, (self.x, self.y), (self.x-jetSize, self.y))
+        # if keys[K_DOWN]:
+        #     self.vy += self.speed
+        #     pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y-jetSize))
+        # if keys[K_UP]:
+        #     self.vy -= self.speed
+        #     pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y+jetSize))
 
             if event.type == pygame.KEYDOWN:
                 key = event.key
@@ -212,15 +229,21 @@ class SolarescapeEnv(PyGameWrapper):
 
                 if key == self.actions["left"]:
                     self.dx -= self.AGENT_SPEED
+                    pygame.draw.line(self.screen, red, centerPosition, (centerPosition[0]+jetSize, centerPosition[1]))
 
                 if key == self.actions["right"]:
                     self.dx += self.AGENT_SPEED
+                    pygame.draw.line(self.screen, red, centerPosition, (centerPosition[0]-jetSize, centerPosition[1]))
 
                 if key == self.actions["up"]:
                     self.dy -= self.AGENT_SPEED
+                    pygame.draw.line(self.screen, red, centerPosition, (centerPosition[0], centerPosition[1]-jetSize))
 
                 if key == self.actions["down"]:
                     self.dy += self.AGENT_SPEED
+                    pygame.draw.line(self.screen, red, centerPosition, (centerPosition[0], centerPosition[1]+jetSize))
+                else: 
+                    pass
 
     def step(self, action):
         pygame.display.update()
@@ -238,7 +261,10 @@ class SolarescapeEnv(PyGameWrapper):
         self.score = self.rewards["tick"]
         dx = self.agent.position.x - self.sun.position.x
         dy = self.agent.position.y - self.sun.position.y
-        dist_to_sun = math.sqrt(dx * dx + dy + dy)
+        if (dx * dx + dy + dy) < 0.1:
+            dist_to_sun = 0.1
+        else:
+            dist_to_sun = math.sqrt(dx * dx + dy + dy)
         reward = -dist_to_sun
         self.score += reward
 
@@ -246,9 +272,11 @@ class SolarescapeEnv(PyGameWrapper):
         for body in self.bodies:
              body.draw(self.screen)
 
+        #if self.agent.position.x > self.width || self.agent.position.x 
+
     def init(self):
         # initial_position, color, size, speed, mass
-        print("initializing")
+
         self.agent = Agent(
             self.AGENT_INIT_POS,
             self.AGENT_COLOR,

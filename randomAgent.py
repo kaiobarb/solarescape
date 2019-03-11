@@ -1,8 +1,10 @@
 import gym
+import time
 from solarescape_env import *
 from ple import PLE
 
-game = SolarescapeEnv(width=556, height=556)
+
+game = SolarescapeEnv(width=856, height=856)
 game.screen = pygame.display.set_mode(game.getScreenDims(), 0, 32)
 p = PLE(game, fps=30, display_screen=False)
 
@@ -18,8 +20,17 @@ if __name__ == '__main__':
     for i in range(100):
            # ob = game.init()
             while True:
-                action = na.pickAction()
-                p.act(action)
+                
+                if (int(time.time()) % 5 == 0):
+                    action = na.pickAction()
+                    print(action)
+                    p.act(action)
+                else:
+                    p.act(None)
+
+                # action = na.pickAction()
+                # print(action)
+                # p.act(action)
                 #game.step(action)
                 #ob, reward, done, _ = env.step(action)
     
