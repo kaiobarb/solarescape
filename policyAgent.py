@@ -1,4 +1,5 @@
 import time
+import calculations
 from solarescape_env import *
 from ple import PLE
 
@@ -7,11 +8,21 @@ game = SolarescapeEnv(width=856, height=856, dt=1)
 game.screen = pygame.display.set_mode(game.getScreenDims(), 0, 32)
 p = PLE(game, fps=30, display_screen=False)
 
-class NaiveAgent():
+class PolicyAgent():
     def __init__(self, actions):
         self.actions = actions
+    def getState(self):
+        state = {
+            "agent_y": self.agent.pos.y,
+            "agent_x": self.agent.pos.x,
+            "agent_velocity_x": self.agent.vel.x,
+            "agent_velocity_y": self.agent.vel.y
+        }
+        return state
     def pickAction(self):
-        return self.actions[np.random.randint(0, len(self.actions))]
+        state = getState()
+        if
+            (return self.actions[np.random.randint(0, len(self.actions))]
 
 if __name__ == '__main__':
     print(game.getActions())
