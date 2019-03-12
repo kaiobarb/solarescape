@@ -1,7 +1,4 @@
 setup.py
-gym_solarescape/__init__.py
-gym_solarescape/envs/__init__.py
-gym_solarescape/envs/solarescape_env.py
 ple/__init__.py
 ple/ple.py
 ple.egg-info/PKG-INFO

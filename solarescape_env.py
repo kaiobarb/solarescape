@@ -85,22 +85,21 @@ class Body(pygame.sprite.Sprite):
             self.color,
             [int(self.position.x), int(self.position.y)],
             int(self.size)
-            
         )
         screen.blit(self.image, self.rect.center)
 
-    def interact(self, other):
+    def interact(self, other, dt):
         dx = other.position.x - self.position.x
         dy = other.position.y - self.position.y
         force = calculations.force(dx, dy, self.mass, self.size, other.mass, other.size)
         dist = calculations.dist(dx, dy, self.size, other.size)
-        acceleration = force / (self.mass * 10000000) # 1000000000000
+        acceleration = force / (self.mass*10) # 1000000000000
         compx = dx / dist
         compy = dy / dist
         self.velocity.x += acceleration * compx
         self.velocity.y += acceleration * compy
-        self.position.x += self.velocity.x
-        self.position.y += self.velocity.y
+        self.position.x += self.velocity.x * dt
+        self.position.y += self.velocity.y * dt
         self.rect.center = (self.position.x, self.position.y)
 
 
@@ -132,8 +131,8 @@ class Agent(pygame.sprite.Sprite):
     def update(self, dx, dy, dt):
         # self.vel.x += dx
         # self.vel.y += dy
-        self.velocity.x += dx
-        self.velocity.y += dy
+        self.velocity.x += dx * dt
+        self.velocity.y += dy * dt
         #self.rect.center = (self.position.x, self.position.y)
 
         # new_x = self.pos.x + self.vel.x * dt
@@ -152,7 +151,7 @@ class Agent(pygame.sprite.Sprite):
         )
         screen.blit(self.image, self.rect.center)
 
-    def interact(self, other):
+    def interact(self, other, dt):
         dx = other.position.x - self.position.x
         dy = other.position.y - self.position.y
         force = calculations.force(dx, dy, self.mass, self.size, other.mass, other.size)
@@ -162,14 +161,14 @@ class Agent(pygame.sprite.Sprite):
         compy = dy / dist
         self.velocity.x += acceleration * compx
         self.velocity.y += acceleration * compy
-        self.position.x += self.velocity.x
-        self.position.y += self.velocity.y
+        self.position.x += self.velocity.x * dt
+        self.position.y += self.velocity.y * dt
         self.rect.center = (self.position.x, self.position.y)
 
 class SolarescapeEnv(PyGameWrapper):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, width, height):
+    def __init__(self, width, height, dt):
 
         #  Definitions for constants used in our agent methods
         actions = {
@@ -184,11 +183,12 @@ class SolarescapeEnv(PyGameWrapper):
 
         self.dx = 0
         self.dy = 0
+        self.dt = dt
         self.ticks = 0
         self.bodies = []
 
         self.AGENT_COLOR = (60, 60, 140)
-        self.AGENT_SPEED = 0.1
+        self.AGENT_SPEED = 0.0005
         self.AGENT_RADIUS = 10
         self.AGENT_INIT_POS = (width/2, height/2+200)
         self.AGENT_MASS = int(10)
@@ -196,8 +196,8 @@ class SolarescapeEnv(PyGameWrapper):
         self.SUN_COLOR = (255, 60, 60)
         self.SUN_SPEED = 0
         self.SUN_RADIUS = 20
-        self.SUN_INIT_POS = (width/2+100, height/2-100)
-        self.SUN_MASS = int(100000000000)
+        self.SUN_INIT_POS = (width/2, height/2)
+        self.SUN_MASS = int(1000000000)
 
     def _handle_player_events(self):
         self.dx = 0.0
@@ -210,69 +210,30 @@ class SolarescapeEnv(PyGameWrapper):
                 pygame.quit()
                 sys.exit()
 
-        #      if keys[K_LEFT]:
-        #     self.vx -= self.speed
-        #     pygame.draw.line(self.screen, red, (self.x, self.y), (self.x+jetSize, self.y))
-        # if keys[K_RIGHT]:
-        #     self.vx += self.speed
-        #     pygame.draw.line(self.screen, red, (self.x, self.y), (self.x-jetSize, self.y))
-        # if keys[K_DOWN]:
-        #     self.vy += self.speed
-        #     pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y-jetSize))
-        # if keys[K_UP]:
-        #     self.vy -= self.speed
-        #     pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y+jetSize))
-
             if event.type == pygame.KEYDOWN:
                 key = event.key
-                #print("key: ", key)
 
                 if key == self.actions["left"]:
+                    self.score -= self.AGENT_SPEED/2
                     self.dx -= self.AGENT_SPEED
                     pygame.draw.line(self.screen, red, centerPosition, (centerPosition[0]+jetSize, centerPosition[1]))
 
                 if key == self.actions["right"]:
+                    self.score -= self.AGENT_SPEED/2
                     self.dx += self.AGENT_SPEED
                     pygame.draw.line(self.screen, red, centerPosition, (centerPosition[0]-jetSize, centerPosition[1]))
 
                 if key == self.actions["up"]:
+                    self.score -= self.AGENT_SPEED/2
                     self.dy -= self.AGENT_SPEED
                     pygame.draw.line(self.screen, red, centerPosition, (centerPosition[0], centerPosition[1]-jetSize))
 
                 if key == self.actions["down"]:
+                    self.score -= self.AGENT_SPEED/2
                     self.dy += self.AGENT_SPEED
                     pygame.draw.line(self.screen, red, centerPosition, (centerPosition[0], centerPosition[1]+jetSize))
                 else: 
                     pass
-
-    def step(self, action):
-        pygame.display.update()
-        self.ticks += 1
-        self.screen.fill((0,0,0))
-        self._handle_player_events()
-        # numBodies = range(len(self.bodies))
-        #print(self.bodies)
-        for bodyA in self.bodies:
-            for bodyB in self.bodies:
-                if(bodyA != bodyB):
-                    #print(bodyA.position)
-                    bodyA.interact(bodyB)
-        self.agent.update(self.dx, self.dy, 1)
-        self.score = self.rewards["tick"]
-        dx = self.agent.position.x - self.sun.position.x
-        dy = self.agent.position.y - self.sun.position.y
-        if (dx * dx + dy + dy) < 0.1:
-            dist_to_sun = 0.1
-        else:
-            dist_to_sun = math.sqrt(dx * dx + dy + dy)
-        reward = -dist_to_sun
-        self.score += reward
-
-        self.agent.draw(self.screen)
-        for body in self.bodies:
-             body.draw(self.screen)
-
-        #if self.agent.position.x > self.width || self.agent.position.x 
 
     def init(self):
         # initial_position, color, size, speed, mass
@@ -282,7 +243,7 @@ class SolarescapeEnv(PyGameWrapper):
             self.AGENT_COLOR,
             self.AGENT_RADIUS,
             self.AGENT_SPEED,
-            self.AGENT_MASS
+            self.AGENT_MASS * self.dt
         )
         # initial_position, color, radius, speed, mass
         self.sun = Body(
@@ -290,7 +251,15 @@ class SolarescapeEnv(PyGameWrapper):
             self.SUN_COLOR,
             self.SUN_RADIUS,
             self.SUN_SPEED,
-            self.SUN_MASS
+            self.SUN_MASS * self.dt
+        )
+
+        self.bun = Body(
+            (100, 400),
+            self.SUN_COLOR,
+            self.SUN_RADIUS-5,
+            self.SUN_SPEED,
+            1000000000 * self.dt
         )
 
         self.sprite_bodies = pygame.sprite.Group()
@@ -298,8 +267,39 @@ class SolarescapeEnv(PyGameWrapper):
         self.sprite_bodies.add(self.sun)
         self.bodies.append(self.agent)
         self.bodies.append(self.sun)
+        # self.bodies.append(self.bun)
         self.score = 0
         self.ticks = 0
+
+    def step(self, action):
+        pygame.display.update()
+        self.ticks += 1
+        self.screen.fill((0,0,0))
+        self._handle_player_events()
+        for bodyA in self.bodies:
+            for bodyB in self.bodies:
+                if(bodyA != bodyB):
+                    bodyA.interact(bodyB, self.dt)
+        self.agent.update(self.dx, self.dy, self.dt)
+        self.score = self.rewards["tick"]
+        dx = self.agent.position.x - self.sun.position.x
+        dy = self.agent.position.y - self.sun.position.y
+        if (dx * dx + dy + dy) < 0.1:
+            dist_to_sun = 0.1
+        else:
+            dist_to_sun = math.sqrt(dx * dx + dy + dy)
+        reward = dist_to_sun
+        self.score += reward
+        self.score += self.agent.velocity.length
+
+        self.agent.draw(self.screen)
+        for body in self.bodies:
+             body.draw(self.screen)
+
+
+        if ( self.agent.position.x > self.width or self.agent.position.x < 0 or self.agent.position.y > self.width or self.agent.position.y < 0):
+            self.reset()
+            self.init()
 
     def game_over(self):
         return False
