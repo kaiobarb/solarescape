@@ -1,7 +1,7 @@
 import time
 
-#import cv2 #what is this?
-#import os #what is this?
+#import cv2 #what is this? I need to install OpenCV to use this
+import os #what is this?
 
 import math
 import random
@@ -178,7 +178,7 @@ class DQN(nn.Module):
 
         def optimize():
             #Perform experience replay and train the network - darleybarreto
-            nonlocal last_sync #again with this nonlocal...
+            #nonlocal last_sync #again with this nonlocal...
 
             if len(memory)<BATCH_SIZE: #if we've overshot bounds of batch? seems like this is saying if we haven't tho...
                 return
@@ -256,6 +256,7 @@ def p_action(action):
 if __name__ == '__main__':
     #p.init() #do I even need this? Kaio didn't seem to be using it for naive agent
     print(game.getActions())
+    tresh = False
     reward = 0
     steps = 1000
     la = LearningAgent(list(game.getActions()))
