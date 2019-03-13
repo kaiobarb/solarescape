@@ -55,9 +55,21 @@ class DQN():
         self.last_reward = 0
         
     def select_action(self, state):
-        probs = F.softmax(self.model(Variable(state, volatile = True))*10) # T(Temperature)=10
-        action = probs.multinomial(1)
-        return action.data[0,0]
+        # probs = F.softmax(self.model(Variable(state, volatile = True))*10) # T(Temperature)=10
+        # action = probs.multinomial(1)
+        # return action.data[0,0]
+
+        # state = torch.from_numpy(state).float().unsqueeze(0)
+        probs = self.model(Variable(state, volatile = True)) 
+        action = probs.data.max(1)[1].cpu()
+        print(action)
+        return action
+
+        # curiosity = random.random()
+        # if curiosity > self.gamma:
+        #     state = torch.from_numpy(state).float().unsqueeze(0)
+        #     probs = dqn(Variable(state, volatile=True))
+        #     return probs.data.max(1)[1].cpu()
     
     def learn(self, batch_state, batch_next_state, batch_reward, batch_action):
         outputs = self.model(batch_state).gather(1, batch_action.unsqueeze(1)).squeeze(1)
