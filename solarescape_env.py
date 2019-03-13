@@ -3,11 +3,11 @@ import ple
 import calculations
 import sys , time , random
 import numpy as np
-import gym
+#import gym
 #from base import PyGameWrapper
 from ple.games.base.pygamewrapper import PyGameWrapper
-from gym import spaces
-from gym.utils import seeding
+#from gym import spaces
+#from gym.utils import seeding
 import math
 from pygame.locals import *
 from Vec2d import vec2d
