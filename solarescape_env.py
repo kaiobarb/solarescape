@@ -156,7 +156,7 @@ class SolarescapeEnv(PyGameWrapper):
             "left": K_a,
             "right": K_d,
             "down": K_s,
-            "nop": None
+            #"nop": None
         }
 
         PyGameWrapper.__init__(self, width, height, actions=actions)
@@ -272,6 +272,7 @@ class SolarescapeEnv(PyGameWrapper):
             for bodyB in self.bodies:
                 if(bodyA != bodyB):
                     bodyA.interact(bodyB, self.dt)
+        print(self.agent.position)
         # Currently, rewards['tick'] = 0. This is for the case where we want reward to be 
         # passively updated over time.
         self.score = self.rewards["tick"]
@@ -298,6 +299,15 @@ class SolarescapeEnv(PyGameWrapper):
         if ( self.agent.position.x > self.width or self.agent.position.x < 0 or self.agent.position.y > self.width or self.agent.position.y < 0):
             self.reset()
             self.init()
+
+    def getGameState(self):
+        state = {
+            "velocity_x": self.agent.velocity.x,
+            "velocity_y": self.agent.velocity.y,
+            "position_x": self.agent.position.x,
+            "position_y": self.agent.position.y
+        }
+        return state
 
     ## The following functions must be overriden.
     def game_over(self):

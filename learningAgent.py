@@ -1,7 +1,7 @@
 import time
 
-import cv2 #what is this?
-import os #what is this?
+#import cv2 #what is this?
+#import os #what is this?
 
 import math
 import random
@@ -27,13 +27,13 @@ from ple import PLE
 #    }
 #    return state
 
-def extract_image(image_data, size, tresh=True):
+def extract_image(image_data, size, thresh=True):
     #resize image and change to grayscale
     snapshot = cv2.cvtColor(cv2.resize(image_data, size), cv2.COLOR_BGR2GRAY)
 
     #threshold function applies fixed-level thresholding (?) to a single-channel array
     #threshold(array, threshold, maximum value, thresholding type
-    if tresh:
+    if thresh:
         _, snapshot = cv2.threshold(snapshot, 100, 255, cv2.THRESH_BINARY)
     return snapshot
 
@@ -65,7 +65,7 @@ opt = {
     "RMSprop": torch.optim.RMSprop
 }
 
-def class DQN(nn.Module):
+class DQN(nn.Module):
     def __init__(self, actions, shape, fc): #what is fc exactly??
         super(DQN, self).__init__()
 
@@ -260,12 +260,12 @@ if __name__ == '__main__':
     steps = 1000
     la = LearningAgent(list(game.getActions()))
     #where is the documentation for extract_image? I imagine it comes from utils
-    snapshot = extract_image(p.getScreenRGB(), (80,80), tresh=tresh)
+    snapshot = extract_image(p.getScreenRGB(), (80,80), thresh=thresh)
     #what is this
     stack_snaps = np.stack((snapshot, snapshot, snapshot, snapshot), axis=0)
 
     while p.game_over() == False:
-        snapshot = extract_image(p.getScreenRGB(), (80, 80), tresh=tresh)
+        snapshot = extract_image(p.getScreenRGB(), (80, 80), thresh=thresh)
         snapshot = np.reshape(snapshot, (1, 80, 80))
         st = np.append(stack_snaps[1:4, :, :], snapshot, axis=0) #what does st stand for?
 
