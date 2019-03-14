@@ -122,10 +122,41 @@ class Agent(Body):
                 pygame.draw.line(self.screen, red, (self.x, self.y), (self.x, self.y+jetSize))
 
 
-class SolarescapeEnv(base.Game):
+class SolarescapeEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, width, height):
+    def __init__(self, width, height, dt):
+
+        #  Action dictionary corresponding to WASD keys + a no-op
+        actions = {
+            "up": K_w,
+            "left": K_a,
+            "right": K_d,
+            "down": K_s,
+            #"nop": None
+        }
+
+        PyGameWrapper.__init__(self, width, height, actions=actions)
+
+        self.dx = 0
+        self.dy = 0
+        self.dt = dt
+        self.ticks = 0
+        self.bodies = []
+
+        """ AGENT AND SUN PROPERTIES """
+        self.AGENT_COLOR = (60, 60, 140)
+        self.AGENT_SPEED = 0.0005
+        self.AGENT_SIZE = 10
+        self.AGENT_INIT_POS = (width/2, height/2+200)
+        self.AGENT_MASS = int(10)
+
+        self.SUN_COLOR = (255, 60, 60)
+        self.SUN_SPEED = 0
+        self.SUN_RADIUS = 20
+        self.SUN_INIT_POS = (width/2, height/2)
+        self.SUN_MASS = int(1000000000)
+
         pygame.init()
         pygame.display.set_caption("Press ESC to quit")
         self.seed()
@@ -153,7 +184,7 @@ class SolarescapeEnv(base.Game):
         self.bodies = []
         pass
 
-    def render(self):
+    def render(self, mode = 'human', close=False):
         for bod in self.bodies:
             bod.render()
         pass
