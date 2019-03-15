@@ -16,17 +16,18 @@ import pygame
 #from ple import PLE
 import random
 
+import gym_solarescape
 sys.path.append('/gym_solarescape/envs')
-from solarescape_env import SolarescapeEnv
+#from solarescape_env import SolarescapeEnv
 
 
 # Get the environment and extract the number of actions.
-
+env = gym.make('solarescape-0')
 game = SolarescapeEnv(width=856, height=856, dt=1)
 game.screen = pygame.display.set_mode(game.getScreenDims(), 0, 32)
 #p = PLE(game, fps=30, frame_skip = 3, num_steps = 1,
 #        force_fps = False, display_screen=False)
-env = gym.make('SolarescapeEnv')
+
 nb_actions = list(game.getActions())
 print(nb_actions)
 

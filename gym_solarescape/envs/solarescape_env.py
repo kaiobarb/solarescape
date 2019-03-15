@@ -3,7 +3,7 @@ import calculations
 import sys , time , random
 import numpy as np
 import gym
-from gym import spaces
+from gym import error, spaces, utils
 from gym.utils import seeding
 from math import *
 from pygame.locals import *
