@@ -10,6 +10,7 @@ import torch.optim as optim
 import torch.autograd as autograd
 from torch.autograd import Variable
 from solarescape_env import SolarescapeEnv
+import matplotlib.pyplot as plt
 
 class Network(nn.Module):
     ## Let's start with a simple network:
@@ -46,6 +47,7 @@ class ReplayMemory(object):
 class DQN():
     def __init__(self, input_size, nb_action, gamma):
         self.gamma = gamma
+        self.epsilon = 0.9
         self.reward_window = []
         self.model = Network(input_size, nb_action)
         self.memory = ReplayMemory(100000)
@@ -60,10 +62,14 @@ class DQN():
         # return action.data[0,0]
 
         # state = torch.from_numpy(state).float().unsqueeze(0)
-        probs = self.model(Variable(state, volatile = True)) 
-        action = probs.data.max(1)[1].cpu()
-        print(action)
-        return action
+        # probs = self.model(Variable(state, volatile = True)) 
+        curiosity = random.random()
+        if curiosity < self.epsilon:
+            probs = F.softmax(self.model(Variable(state, volatile = True))*10) # T(Temperature)=10
+            action = probs.data.max(1)[1].cpu()
+            return action
+        else:
+           return torch.LongTensor([[random.randrange(self.model.nb_action)]])
 
         # curiosity = random.random()
         # if curiosity > self.gamma:
@@ -127,33 +133,40 @@ p = PLE(game, fps=30, frame_skip = 3, num_steps = 1,
 class LearningAgent():
     def __init__(self, actions):
         self.actions = actions
-        self.brain = DQN(4, 4, 0.9)
+        self.brain = DQN(5, 5, 0.9)
 
-    def pickAction(self, action):
+    def pickAction(self, a):
+        action = self.actions[a]
         return p.act(action)
 
 
 if __name__ == '__main__':
-    print(game.getActions())
     reward = 0
     steps = 1000
+    epoch = 0
+    limit = 100
     la = LearningAgent(list(game.getActions()))
-    """
-    #where is the documentation for extract_image? I imagine it comes from utils
-    snapshot = extract_image(p.getScreenRGB(), (80,80), thresh=thresh)
-    #what is this
-    stack_snaps = np.stack((snapshot, snapshot, snapshot, snapshot), axis=0)
-    """
+    la.brain.load()
+    scores = []
+
     i = 0
-    while p.game_over() == False:
+    while epoch <= limit:
+        
         # We want to train
         i+=1
-        print(i)
         state = list(p.getGameState().values())
         reward = p.score()
+        #print(reward)
         action = la.brain.update(reward, state)
-        print(action)
         la.pickAction(action)
-        
-    score = p.score()
-    p.reset_game()
+        if i > steps:
+            print(epoch)
+            epoch += 1
+            la.brain.save()
+            scores.append(la.brain.score())
+            plt.plot(scores)
+            plt.savefig("RewardGraph.png")
+            i = 0
+    la.brain.save()
+    plt.show()
+    

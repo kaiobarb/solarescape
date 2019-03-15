@@ -3,17 +3,14 @@ import ple
 import calculations
 import sys , time , random
 import numpy as np
-#import gym
-#from base import PyGameWrapper
 from ple.games.base.pygamewrapper import PyGameWrapper
-#from gym import spaces
-#from gym.utils import seeding
 import math
 from pygame.locals import *
 from Vec2d import vec2d
 from ple.games.utils import percent_round_int
 from pygame.locals import *
 from decimal import *
+import matplotlib.pyplot as plt
 
 
 
@@ -156,7 +153,7 @@ class SolarescapeEnv(PyGameWrapper):
             "left": K_a,
             "right": K_d,
             "down": K_s,
-            #"nop": None
+            "nop": None
         }
 
         PyGameWrapper.__init__(self, width, height, actions=actions)
@@ -166,19 +163,22 @@ class SolarescapeEnv(PyGameWrapper):
         self.dt = dt
         self.ticks = 0
         self.bodies = []
+        
 
         """ AGENT AND SUN PROPERTIES """
         self.AGENT_COLOR = (60, 60, 140)
-        self.AGENT_SPEED = 0.0005
+        self.AGENT_SPEED = 0.03
         self.AGENT_SIZE = 10
         self.AGENT_INIT_POS = (width/2, height/2+200)
-        self.AGENT_MASS = int(10)
+        self.AGENT_MASS = int(1)
 
         self.SUN_COLOR = (255, 60, 60)
         self.SUN_SPEED = 0
         self.SUN_RADIUS = 20
         self.SUN_INIT_POS = (width/2, height/2)
-        self.SUN_MASS = int(1000000000)
+        self.SUN_MASS = int(332953000000)
+
+        self.dist_to_sun = 200
 
 
     # This function is called by the PLE reference to handle actions.
@@ -186,7 +186,7 @@ class SolarescapeEnv(PyGameWrapper):
     def _handle_player_events(self):
         self.dx = 0.0
         self.dy = 0.0
-        jetSize = 10
+        jetSize = 20
         centerPosition = (int(self.agent.position.x+self.agent.size/2) , int(self.agent.position.y+self.agent.size/2) )
         red = (255,0,0)
         for event in pygame.event.get():
@@ -198,24 +198,24 @@ class SolarescapeEnv(PyGameWrapper):
                 key = event.key
 
                 if key == self.actions["left"]:
-                    self.score -= self.AGENT_SPEED/2
+                    #self.score -= self.AGENT_SPEED/2
                     self.dx -= self.AGENT_SPEED
                     pygame.draw.line(self.screen, red, centerPosition, (centerPosition[0]+jetSize, centerPosition[1]))
 
                 if key == self.actions["right"]:
-                    self.score -= self.AGENT_SPEED/2
+                    #self.score -= self.AGENT_SPEED/2
                     self.dx += self.AGENT_SPEED
                     pygame.draw.line(self.screen, red, centerPosition, (centerPosition[0]-jetSize, centerPosition[1]))
 
                 if key == self.actions["up"]:
-                    self.score -= self.AGENT_SPEED/2
+                    #self.score -= self.AGENT_SPEED/2
                     self.dy -= self.AGENT_SPEED
-                    pygame.draw.line(self.screen, red, centerPosition, (centerPosition[0], centerPosition[1]-jetSize))
+                    pygame.draw.line(self.screen, red, centerPosition, (centerPosition[0], centerPosition[1]+jetSize))
 
                 if key == self.actions["down"]:
-                    self.score -= self.AGENT_SPEED/2
+                    #self.score -= self.AGENT_SPEED/2
                     self.dy += self.AGENT_SPEED
-                    pygame.draw.line(self.screen, red, centerPosition, (centerPosition[0], centerPosition[1]+jetSize))
+                    pygame.draw.line(self.screen, red, centerPosition, (centerPosition[0], centerPosition[1]-jetSize))
                 else: 
                     pass
 
@@ -238,20 +238,20 @@ class SolarescapeEnv(PyGameWrapper):
             self.SUN_MASS * self.dt
         )
 
-        ## An extra Body to play around with ;)
-        # self.bun = Body(
-        #     (100, 400),
-        #     self.SUN_COLOR,
-        #     self.SUN_RADIUS-5,
-        #     self.SUN_SPEED,
-        #     1000000000 * self.dt
-        # )
+        sun2 = Body(
+            (self.width/2 -200, self.height/2+32),
+            self.SUN_COLOR,
+            self.SUN_RADIUS,
+            self.SUN_SPEED,
+            self.SUN_MASS * self.dt
+        )
 
         self.sprite_bodies = pygame.sprite.Group()
         self.sprite_bodies.add(self.agent)
         self.sprite_bodies.add(self.sun)
         self.bodies.append(self.agent)
         self.bodies.append(self.sun)
+        #self.bodies.append(sun2)
         # self.bodies.append(self.bun)
         self.score = 0
         self.ticks = 0
@@ -260,35 +260,43 @@ class SolarescapeEnv(PyGameWrapper):
     def step(self, action):
         # Update visual elements
         pygame.display.update()
+        
         # 'ticks' is like a unity of time. Not really used, but it's here just in case.
         self.ticks += 1
+
         # Set background color
         self.screen.fill((0,0,0))
-        # Take action, then update the agent's position based on that action
-        self._handle_player_events()
-        self.agent.update(self.dx, self.dy, self.dt)
+
         # Gravity!
         for bodyA in self.bodies:
             for bodyB in self.bodies:
                 if(bodyA != bodyB):
                     bodyA.interact(bodyB, self.dt)
-        print(self.agent.position)
+
         # Currently, rewards['tick'] = 0. This is for the case where we want reward to be 
         # passively updated over time.
         self.score = self.rewards["tick"]
+
         # Get distance from sun, and use that distance to reward the agent for being far from it.
         dx = self.agent.position.x - self.sun.position.x
         dy = self.agent.position.y - self.sun.position.y
-        if (dx * dx + dy + dy) < 0.1:
-            dist_to_sun = 0.1
-        else:
-            dist_to_sun = math.sqrt(dx * dx + dy + dy)
-        reward = dist_to_sun
-        # Score is the actual reward that is observed by PLE, so we update that.
-        self.score += reward
+        self.dist_to_sun = calculations.dist(dx, dy, self.agent.size/2, self.sun.size/2)
+        if (abs(self.dist_to_sun - (self.agent.size/2 + self.sun.size/2)) < 1 ):
+            self.score -= 10000
+        #reward = self.dist_to_sun
+
+        #print(self.agent.velocity.length*10, " , ", self.dist_to_sun)
+
         # Agent velocity is a vector, so we get the magnitude (length) of it and
         # add it to the score to reward going fast.
-        self.score += self.agent.velocity.length
+        reward = self.dist_to_sun + self.agent.velocity.length*self.dist_to_sun
+        # Score is the actual reward that is observed by PLE, so we update that.
+        self.score += reward
+        #print(self.score)
+
+        # Take action, then update the agent's position based on that action
+        self._handle_player_events()
+        self.agent.update(self.dx, self.dy, self.dt)
 
         # Draw all the agent and celestial bodies onto the screen.
         self.agent.draw(self.screen)
@@ -297,6 +305,7 @@ class SolarescapeEnv(PyGameWrapper):
 
         # Reset the simulation if the agent leaves the screen. Once we start implementing DQN we will probably want to move this step over to the other file.
         if ( self.agent.position.x > self.width or self.agent.position.x < 0 or self.agent.position.y > self.width or self.agent.position.y < 0):
+            self.score += 100000
             self.reset()
             self.init()
 
@@ -305,7 +314,8 @@ class SolarescapeEnv(PyGameWrapper):
             "velocity_x": self.agent.velocity.x,
             "velocity_y": self.agent.velocity.y,
             "position_x": self.agent.position.x,
-            "position_y": self.agent.position.y
+            "position_y": self.agent.position.y,
+            "distance_to_sun": self.dist_to_sun
         }
         return state
 

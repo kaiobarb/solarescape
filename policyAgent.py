@@ -4,7 +4,7 @@ from solarescape_env import *
 from ple import PLE
 
 
-game = SolarescapeEnv(width=856, height=856, dt=1)
+game = SolarescapeEnv(width=856, height=856, dt=5)
 game.screen = pygame.display.set_mode(game.getScreenDims(), 0, 32)
 p = PLE(game, fps=30, display_screen=False)
 
