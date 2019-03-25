@@ -28,11 +28,9 @@ static PyObject *calculateForce(PyObject *self, PyObject* args) {
     distance = sqrt(dx * dx + dy * dy);
     if(distance < (ra + rb)+10) distance = ra + rb; 
 
-    ma = ma * 1000000000;
-	mb = mb * 1000000000;
-    ra = ra * 10000;
-    rb = rb * 10000;
-    distance = distance * 100000 ;
+    ma = ma ; // * 100000000000
+	mb = mb;
+    distance = distance ; // * 1000000
 
     force = (GRAVITY_CONST * ma * mb) / distance;
 
