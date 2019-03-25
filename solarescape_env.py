@@ -163,6 +163,7 @@ class SolarescapeEnv(PyGameWrapper):
         self.dt = dt
         self.ticks = 0
         self.bodies = []
+        self.escapes = 0
         
 
         """ AGENT AND SUN PROPERTIES """
@@ -282,14 +283,15 @@ class SolarescapeEnv(PyGameWrapper):
         dy = self.agent.position.y - self.sun.position.y
         self.dist_to_sun = calculations.dist(dx, dy, self.agent.size/2, self.sun.size/2)
         if (abs(self.dist_to_sun - (self.agent.size/2 + self.sun.size/2)) < 1 ):
-            self.score -= 10000
+            self.score -= 1000
         #reward = self.dist_to_sun
 
         #print(self.agent.velocity.length*10, " , ", self.dist_to_sun)
 
         # Agent velocity is a vector, so we get the magnitude (length) of it and
         # add it to the score to reward going fast.
-        reward = self.dist_to_sun + self.agent.velocity.length*self.dist_to_sun
+        reward =self.agent.velocity.length
+
         # Score is the actual reward that is observed by PLE, so we update that.
         self.score += reward
         #print(self.score)
@@ -305,9 +307,19 @@ class SolarescapeEnv(PyGameWrapper):
 
         # Reset the simulation if the agent leaves the screen. Once we start implementing DQN we will probably want to move this step over to the other file.
         if ( self.agent.position.x > self.width or self.agent.position.x < 0 or self.agent.position.y > self.width or self.agent.position.y < 0):
-            self.score += 100000
+            self.score += 1000
+            self.escapes += 1
             self.reset()
             self.init()
+
+        if(self.ticks > 1000):
+            if self.escapes == 0:
+                self.score -= 100
+            self.reset()
+            self.init()
+
+
+        print(self.score)
 
     def getGameState(self):
         state = {
